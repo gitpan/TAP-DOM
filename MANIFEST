@@ -20,5 +20,6 @@ t/00-load.t
 t/boilerplate.t
 t/pod-coverage.t
 t/pod.t
+t/some_tap.dom
 t/some_tap.txt
 t/tap_dom.t
