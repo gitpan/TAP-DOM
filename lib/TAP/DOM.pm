@@ -4,10 +4,11 @@ use strict;
 use warnings;
 
 use TAP::Parser;
+use TAP::Parser::Aggregator;
 use YAML::Syck;
 use Data::Dumper;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 # plain function approach
 sub new {
@@ -22,6 +23,10 @@ sub new {
         my $bailout;
 
         my $parser = new TAP::Parser( { %args } );
+
+        my $aggregate = new TAP::Parser::Aggregator;
+        $aggregate->start;
+
         while ( my $result = $parser->next ) {
                 no strict 'refs';
 
@@ -84,6 +89,27 @@ sub new {
         }
         @pragmas = $parser->pragmas;
 
+        $aggregate->add( main => $parser );
+        $aggregate->stop;
+
+        my %summary = (
+                       failed          => scalar $aggregate->failed,
+                       parse_errors    => scalar $aggregate->parse_errors,
+                       passed          => scalar $aggregate->passed,
+                       skipped         => scalar $aggregate->skipped,
+                       todo            => scalar $aggregate->todo,
+                       todo_passed     => scalar $aggregate->todo_passed,
+                       wait            => scalar $aggregate->wait,
+                       exit            => scalar $aggregate->exit,
+                       elapsed         => $aggregate->elapsed,
+                       elapsed_timestr => $aggregate->elapsed_timestr,
+                       all_passed      => $aggregate->all_passed ? 1 : 0,
+                       status          => $aggregate->get_status,
+                       total           => $aggregate->total,
+                       has_problems    => $aggregate->has_problems ? 1 : 0,
+                       has_errors      => $aggregate->has_errors ? 1 : 0,
+                      );
+
         my $tapdata = {
                        plan          => $plan,
                        lines         => \@lines,
@@ -98,6 +124,7 @@ sub new {
                        has_problems  => $parser->has_problems,
                        exit          => $parser->exit,
                        parse_errors  => [ $parser->parse_errors ],
+                       summary       => \%summary,
                       };
         return bless $tapdata, $class;
 }
@@ -159,7 +186,9 @@ See the TAP example file in C<t/some_tap.txt> and its corresponding
 result structure in C<t/some_tap.dom>.
 
 Here is a slightly commented and beautified excerpt of
-C<t/some_tap.dom>:
+C<t/some_tap.dom>. Due to it's beeing manually washed for readability
+there might be errors in it, so for final reference, dump a DOM by
+yourself.
 
  bless( {
   'version'       => 13,
@@ -178,6 +207,31 @@ C<t/some_tap.dom>:
   'exit'          => 0,
   'start_time'    => '1236463400.25151',
   'end_time'      => '1236463400.25468',
+  # for the meaning of this summary see also TAP::Parser::Aggregator.
+  'summary' => {
+                 'status'          => 'FAIL',
+                 'total'           => 8,
+                 'passed'          => 6,
+                 'failed'          => 2,
+                 'all_passed'      => 0,
+                 'skipped'         => 1,
+                 'todo'            => 4,
+                 'todo_passed'     => 2,
+                 'parse_errors'    => 1,
+                 'has_errors'      => 1,
+                 'has_problems'    => 1,
+                 'exit'            => 0,
+                 'wait'            => 0
+                 'elapsed'         => bless( [
+                                              0,
+                                              '0',
+                                              0,
+                                              0,
+                                              0,
+                                              0
+                                             ], 'Benchmark' ),
+                 'elapsed_timestr' => ' 0 wallclock secs ( 0.00 usr +  0.00 sys =  0.00 CPU)',
+               },
   'lines' => [
               {
                'is_actual_ok' => 0,
