@@ -8,7 +8,7 @@ use TAP::Parser::Aggregator;
 use YAML::Syck;
 use Data::Dumper;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 # plain function approach
 sub new {
@@ -76,7 +76,7 @@ sub new {
                 # $lines[-1]->{diag}{yaml} = $result->data if $result->is_yaml;
 
                 # Wooosh!
-                if ($result->is_yaml or $result->is_comment)
+                if ($result->is_yaml or $result->is_comment and @lines)
                 {
                         # embed yaml/comment lines to the line before,
                         # nesting like in

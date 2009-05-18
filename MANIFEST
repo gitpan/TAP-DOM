@@ -22,4 +22,8 @@ t/pod-coverage.t
 t/pod.t
 t/some_tap.dom
 t/some_tap.txt
+t/some_tap2.txt
+t/some_tap3.txt
 t/tap_dom.t
+t/tap_dom2.t
+t/tap_dom3.t
