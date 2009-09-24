@@ -3,9 +3,12 @@ abstract: 'TAP as document data structure.'
 author:
   - 'Steffen Schwigon <schwigon@cpan.org>'
 build_requires:
+  ExtUtils::MakeMaker: 6.42
   Test::More: 0
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.77'
+generated_by: 'Module::Install version 0.91'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -15,11 +18,13 @@ no_index:
   directory:
     - inc
     - t
+    - xt
 requires:
   Data::Dumper: 0
   Sub::Exporter: 0
   Test::Harness: 3
   YAML::Syck: 0
+  perl: 5.6.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.04
+version: 0.05

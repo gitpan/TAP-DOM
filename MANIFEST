@@ -27,3 +27,6 @@ t/some_tap3.txt
 t/tap_dom.t
 t/tap_dom2.t
 t/tap_dom3.t
+t/tap_dom4.t
+xt/regexp-common.tap
+xt/tap_dom_large_tap.t

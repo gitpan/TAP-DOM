@@ -1,5 +1,6 @@
 package TAP::DOM;
 
+use 5.006;
 use strict;
 use warnings;
 
@@ -8,7 +9,7 @@ use TAP::Parser::Aggregator;
 use YAML::Syck;
 use Data::Dumper;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 # plain function approach
 sub new {
@@ -22,6 +23,8 @@ sub new {
         my @pragmas;
         my $bailout;
 
+        my %IGNORE = map { $_ => 1 } @{$args{ignore}};
+        delete $args{ignore};
         my $parser = new TAP::Parser( { %args } );
 
         my $aggregate = new TAP::Parser::Aggregator;
@@ -33,56 +36,41 @@ sub new {
                 my %entry = ();
 
                 # test info
-                $entry{$_} = $result->$_ foreach (qw(raw
-                                                     as_string
-                                                   ));
+                foreach (qw(raw as_string )) {
+                        $entry{$_} = $result->$_ unless $IGNORE{$_};
+                }
 
                 if ($result->is_test) {
-                        $entry{$_} = $result->$_ foreach (qw(type
-                                                             directive
-                                                             explanation
-                                                             number
-                                                             description
-                                                           ));
-                        $entry{$_} = $result->$_ ? 1 : 0 foreach (qw(is_ok
-                                                                     is_unplanned
-                                                                   ));
+                        foreach (qw(type directive explanation number description )) {
+                                $entry{$_} = $result->$_ unless $IGNORE{$_};
+                        }
+                        foreach (qw(is_ok is_unplanned )) {
+                                $entry{$_} = $result->$_ ? 1 : 0 unless $IGNORE{$_};
+                        }
                 }
 
                 # plan
                 $plan = $result->as_string if $result->is_plan;
 
                 # meta info
-                $entry{$_} = $result->$_ ? 1 : 0 foreach (qw(has_skip has_todo));
-                $entry{$_} = $result->$_ ? 1 : 0
-                    foreach (qw( is_pragma
-                                 is_comment
-                                 is_bailout
-                                 is_plan
-                                 is_version
-                                 is_yaml
-                                 is_unknown
-                                 is_test
-                                 is_bailout
-                              ));
-                $entry{is_actual_ok} = $result->has_todo && $result->is_actual_ok ? 1 : 0;
-                $entry{data} = $result->data if $result->is_yaml;
+                foreach ((qw(has_skip has_todo))) {
+                        $entry{$_} = $result->$_ ? 1 : 0 unless $IGNORE{$_};
+                }
+                foreach (qw( is_pragma is_comment is_bailout is_plan
+                             is_version is_yaml is_unknown is_test is_bailout ))
+                {
+                        $entry{$_} = $result->$_ ? 1 : 0 unless $IGNORE{$_};
+                }
+                $entry{is_actual_ok} = $result->has_todo && $result->is_actual_ok ? 1 : 0 unless $IGNORE{is_actual_ok};
+                $entry{data}         = $result->data if $result->is_yaml && !$IGNORE{data};
 
-                # yaml becomes content of line before
-                #
-                # TODO this is actually a bad hack only needed for Data::DPath. It should be banned.
-                # and instead provide additionall "typed interconnections" between lines.
-                # One E.g.: belongs_to => (reference of line before)
-                # $lines[-1]->{diag}{yaml} = $result->data if $result->is_yaml;
 
-                # Wooosh!
+                # yaml and comments are taken as children of the line before
                 if ($result->is_yaml or $result->is_comment and @lines)
                 {
-                        # embed yaml/comment lines to the line before,
-                        # nesting like in
-                        # http://cpansearch.perl.org/src/RJBS/Pod-Elemental-0.003/t/nested-over.t
                         push @{ $lines[-1]->{_children} }, \%entry;
-                } else
+                }
+                else
                 {
                         push @lines, \%entry;
                 }
@@ -153,7 +141,7 @@ The purpose of this module is
 A) to define a B<reliable> data structure and
 B) to help create this structure from TAP.
 
-That's useful when you want to analyze the TAP in detail with "data
+That is useful when you want to analyze the TAP in detail with "data
 exploration tools", like L<Data::DPath|Data::DPath>.
 
 ``Reliable'' means that this structure is kind of an API that will not
@@ -166,7 +154,8 @@ change, so your data tools can, well, rely on it.
 Constructor which immediately triggers parsing the TAP via TAP::Parser
 and returns a big data structure containing the extracted results.
 
-Parameters are passed through to TAP::Parser, usually one of these:
+All parameters (except C<ignore>, see section "HOW TO STRIP DETAILS")
+are passed through to TAP::Parser. Usually just one of those:
 
   tap => $some_tap_string
 
@@ -358,6 +347,41 @@ array of those comment/yaml line elements.
 
 With this you can recognize where the diagnostic lines semantically
 belong.
+
+=head1 HOW TO STRIP DETAILS
+
+You can make the DOM a bit more terse (i.e., less blown up) if you do
+not need every detail. For this provide the C<ignore> option to
+new(). It is an array ref specifying keys that should not be contained
+in the TAP-DOM. Currently supported are:
+
+ has_todo
+ has_skip
+ directive
+ as_string
+ explanation
+ description
+ is_unplanned
+ is_actual_ok
+ is_bailout
+ is_unknown
+ is_version
+ is_bailout
+ is_comment
+ is_pragma
+ is_plan
+ is_test
+ is_yaml
+ is_ok
+ number
+ type
+ raw
+
+Use it like this:
+
+   $tapdom = TAP::DOM->new (tap    => $tap,
+                            ignore => [ qw( raw as_string ) ],
+                           );
 
 =head1 AUTHOR
 
