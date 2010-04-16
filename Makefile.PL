@@ -6,16 +6,18 @@ name     'TAP-DOM';
 all_from 'lib/TAP/DOM.pm';
 author   'Steffen Schwigon <schwigon@cpan.org>';
 
+author_requires 'Module::Install::AuthorTests';
+
 requires 'Test::Harness' => 3.0;
 requires 'Data::Dumper';
 requires 'YAML::Syck';
 requires 'Sub::Exporter';
 
-test_requires 'Test::More';
-tests_recursive;
+author_tests('xt');
+test_requires 'Test::More' => 0.88;
 
 auto_install;
 
-#makemaker_args dist => { PREOP => 'pod2text lib/TAP/DOM.pm > README' } ;
+repository 'git://github.com/renormalist/tap-dom.git';
 
 WriteAll;

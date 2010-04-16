@@ -1,4 +1,15 @@
+2010-04-16  Steffen Schwigon  <ss5@renormalist.net>
+
+	* 0.06
+
+	* New option "ignorelines" to strip unneccessary lines from the
+	TAP that would otherwise just blow-up memory in the DOM.
+
+	* distribution maintenance
+
 2009-09-24  Steffen Schwigon  <ss5@renormalist.net>
+
+	* 0.05
 
 	* Allow to create more terse DOMs by accepting an "ignore" option
 	to declare items that should not be included.
