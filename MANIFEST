@@ -13,6 +13,9 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/TAP/DOM.pm
+lib/TAP/DOM/Config.pm
+lib/TAP/DOM/Entry.pm
+lib/TAP/DOM/Summary.pm
 Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP
@@ -24,11 +27,13 @@ t/some_tap.dom
 t/some_tap.txt
 t/some_tap2.txt
 t/some_tap3.txt
+t/some_tap5_usebitsets.txt
 t/some_tap_doublecomments.txt
 t/tap_dom.t
 t/tap_dom2.t
 t/tap_dom3.t
 t/tap_dom4.t
+t/tap_dom5_usebitsets.t
 t/tap_dom_ignore_lines.t
 xt/pod-coverage.t
 xt/pod.t
