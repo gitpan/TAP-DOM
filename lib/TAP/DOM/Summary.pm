@@ -1,4 +1,11 @@
 package TAP::DOM::Summary;
+BEGIN {
+  $TAP::DOM::Summary::AUTHORITY = 'cpan:SCHWIGON';
+}
+{
+  $TAP::DOM::Summary::VERSION = '0.11';
+}
+# ABSTRACT: TAP::DOM::Summary - Accessors for TAP::DOM summary part
 
 use 5.006;
 use strict;
@@ -30,10 +37,11 @@ __END__
 
 =pod
 
+=encoding utf-8
+
 =head1 NAME
 
-TAP::DOM::Summary - Accessors for TAP::DOM summary part
-
+TAP::DOM::Summary - TAP::DOM::Summary - Accessors for TAP::DOM summary part
 
 =head1 DESCRIPTION
 
@@ -72,5 +80,16 @@ The C<summary> part covers aggregated results from TAP::Parser::Aggregator.
 =head2 total
 
 =head2 wait
+
+=head1 AUTHOR
+
+Steffen Schwigon <ss5@renormalist.net>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Steffen Schwigon.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

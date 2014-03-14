@@ -1,4 +1,11 @@
 package TAP::DOM::Config;
+BEGIN {
+  $TAP::DOM::Config::AUTHORITY = 'cpan:SCHWIGON';
+}
+{
+  $TAP::DOM::Config::VERSION = '0.11';
+}
+# ABSTRACT: TAP::DOM::Config - Accessors for TAP::DOM specific parse config
 
 use 5.006;
 use strict;
@@ -18,9 +25,11 @@ __END__
 
 =pod
 
+=encoding utf-8
+
 =head1 NAME
 
-TAP::DOM::Config - Accessors for TAP::DOM specific parse config
+TAP::DOM::Config - TAP::DOM::Config - Accessors for TAP::DOM specific parse config
 
 =head1 DESCRIPTION
 
@@ -35,5 +44,16 @@ The C<tapdom_config> part covers TAP::DOM specific parse options.
 =head2 ignorelines
 
 =head2 usebitsets
+
+=head1 AUTHOR
+
+Steffen Schwigon <ss5@renormalist.net>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Steffen Schwigon.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

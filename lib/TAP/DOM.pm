@@ -1,4 +1,13 @@
 package TAP::DOM;
+# git description: v0.10-16-gc984b3e
+
+BEGIN {
+  $TAP::DOM::AUTHORITY = 'cpan:SCHWIGON';
+}
+{
+  $TAP::DOM::VERSION = '0.11';
+}
+# ABSTRACT: TAP::DOM - TAP as Document Object Model.
 
 use 5.006;
 use strict;
@@ -11,8 +20,6 @@ use TAP::Parser;
 use TAP::Parser::Aggregator;
 use YAML::Syck;
 use Data::Dumper;
-
-our $VERSION = '0.10';
 
 our $IS_PLAN      = 1;
 our $IS_OK        = 2;
@@ -142,7 +149,7 @@ sub new {
                 # map to constants
                 # then loop
                 foreach (qw( is_pragma is_comment is_bailout is_plan
-                             is_version is_yaml is_unknown is_test is_bailout ))
+                             is_version is_yaml is_unknown is_test))
                 {
                         if ($USEBITSETS) {
                                 $entry->{is_has} |= $result->$_ ? ${uc $_} : 0 unless $IGNORE{$_};
@@ -151,6 +158,17 @@ sub new {
                         }
                 }
                 if (! $IGNORE{is_actual_ok}) {
+                        # XXX:
+                        # I think it's confusing when the value of
+                        # "is_actual_ok" only has a meaning when
+                        # "has_todo" is true.
+                        # This makes it difficult to evaluate later.
+                        # But it's aligned with TAP::Parser
+                        # which also sets this only on "has_todo".
+                        #
+                        # Maybe the problem is a general philosophical one
+                        # in TAP::DOM to always have each hashkey existing.
+                        # Hmmm...
                         my $is_actual_ok = ($result->has_todo && $result->is_actual_ok) ? 1 : 0;
                         if ($USEBITSETS) {
                                 $entry->{is_has} |= $is_actual_ok ? $IS_ACTUAL_OK : 0;
@@ -222,6 +240,65 @@ sub new {
         return bless $tapdata, $class;
 }
 
+sub _entry_to_tapline
+{
+        my ($self, $entry) = @_;
+
+        my %IGNORE = %{$self->{tapdom_config}{ignore}};
+
+        my $tapline = "";
+
+        # ok/notok test lines
+        if ($entry->{is_test})
+        {
+                $tapline = join(" ",
+                                # the original "NOT" is more difficult to reconstruct than it should...
+                                ($entry->{has_todo}
+                                 ? $entry->{is_actual_ok} ? () : "not"
+                                 : $entry->{is_ok}        ? () : "not"),
+                                "ok",
+                                ($entry->{number} || ()),
+                                ($entry->{description} || ()),
+                                ($entry->has_skip   ? "# SKIP ".($entry->{explanation} || "")
+                                 : $entry->has_todo ? "# TODO ".($entry->{explanation} || "")
+                                 : ()),
+                               );
+        }
+        # pragmas and meta lines, but no version nor plan
+        elsif ($entry->{is_pragma}  ||
+               $entry->{is_comment} ||
+               $entry->{is_bailout} ||
+               $entry->{is_yaml})
+        {
+                $tapline = $IGNORE{raw} ? $entry->{as_string} : $entry->{raw}; # if "raw" was 'ignored' try "as_string"
+        }
+        return $tapline;
+}
+
+sub _lines_to_tap
+{
+        my ($self, $lines) = @_;
+
+        my @taplines;
+        foreach my $entry (@$lines)
+        {
+                my $tapline = $self->_entry_to_tapline($entry);
+                push @taplines, $tapline if $tapline;
+                push @taplines, $self->_lines_to_tap($entry->{_children}) if $entry->{_children};
+        }
+        return @taplines;
+}
+
+sub to_tap
+{
+    my ($self) = @_;
+
+    my @taplines = $self->_lines_to_tap($self->{lines});
+    unshift @taplines, $self->{plan};
+    unshift @taplines, "TAP version ".$self->{version};
+    my $tap = join("\n", @taplines)."\n";
+    return $tap;
+}
 
 1; # End of TAP::DOM
 
@@ -229,22 +306,35 @@ __END__
 
 =pod
 
+=encoding utf-8
+
 =head1 NAME
 
-TAP::DOM - TAP as document data structure.
+TAP::DOM - TAP::DOM - TAP as Document Object Model.
 
 =head1 SYNOPSIS
 
+ # Create a DOM from TAP
  use TAP::DOM;
- my $tapdata = TAP::DOM->new( tap => $tap ); # same options as TAP::Parser
- print Dumper($tapdata);
-
+ my $tapdom = TAP::DOM->new( tap => $tap ); # same options as TAP::Parser
+ print Dumper($tapdom);
+ 
+ # Recreate TAP from DOM
+ my $tap2 = $tapdom->to_tap;
 
 =head1 DESCRIPTION
 
 The purpose of this module is
-A) to define a B<reliable> data structure and
-B) to help create this structure from TAP.
+
+=over 4
+
+=item A) to define a B<reliable> data structure (a DOM)
+
+=item B) create a DOM from TAP
+
+=item C) recreate TAP from a DOM
+
+=back
 
 That is useful when you want to analyze the TAP in detail with "data
 exploration tools", like L<Data::DPath|Data::DPath>.
@@ -252,7 +342,7 @@ exploration tools", like L<Data::DPath|Data::DPath>.
 ``Reliable'' means that this structure is kind of an API that will not
 change, so your data tools can, well, rely on it.
 
-=head1 FUNCTIONS
+=head1 METHODS
 
 =head2 new
 
@@ -270,6 +360,10 @@ or
   source => $test_file
 
 But there are more, see L<TAP::Parser|TAP::Parser>.
+
+=head2 to_tap
+
+Called on a TAP::DOM object it returns a string that is TAP.
 
 =head1 STRUCTURE
 
@@ -452,7 +546,6 @@ yourself.
              ],
  }, 'TAP::DOM')                                          # blessed
 
-
 =head1 NESTED LINES
 
 As you can see above, diagnostic lines (comment or yaml) are nested
@@ -594,62 +687,13 @@ And the constants can be imported into your namespace:
 
 =head1 AUTHOR
 
-Steffen Schwigon, C<< <schwigon at cpan.org> >>
+Steffen Schwigon <ss5@renormalist.net>
 
-=head1 BUGS
+=head1 COPYRIGHT AND LICENSE
 
-Currently I'm not yet sure whether the structure is already
-``reliable'' and ``stable'' as is stated in the B<DESCRIPTION>. I will
-probably call it version C<1.0> once I'm fine with it.
+This software is copyright (c) 2014 by Steffen Schwigon.
 
-Please report any bugs or feature requests to C<bug-tap-data at
-rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=TAP-DOM>.  I will be
-notified, and then you'll automatically be notified of progress on
-your bug as I make changes.
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc TAP::DOM
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=TAP-DOM>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/TAP-DOM>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/TAP-DOM>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/TAP-DOM>
-
-=back
-
-
-=head1 REPOSITORY
-
-The public repository is hosted on github:
-
-  git clone git://github.com/renormalist/tap-dom.git
-
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright 2009 Steffen Schwigon, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

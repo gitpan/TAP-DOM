@@ -1,4 +1,11 @@
 package TAP::DOM::Entry;
+BEGIN {
+  $TAP::DOM::Entry::AUTHORITY = 'cpan:SCHWIGON';
+}
+{
+  $TAP::DOM::Entry::VERSION = '0.11';
+}
+# ABSTRACT: TAP::DOM::Entry - Accessors for TAP::DOM line entries
 
 use 5.006;
 use strict;
@@ -52,9 +59,11 @@ __END__
 
 =pod
 
+=encoding utf-8
+
 =head1 NAME
 
-TAP::DOM::Entry - Accessors for TAP::DOM line entries
+TAP::DOM::Entry - TAP::DOM::Entry - Accessors for TAP::DOM line entries
 
 =head1 DESCRIPTION
 
@@ -110,5 +119,16 @@ accessors to all other entry fields.
 =head2 raw
 
 =head2 type
+
+=head1 AUTHOR
+
+Steffen Schwigon <ss5@renormalist.net>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Steffen Schwigon.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

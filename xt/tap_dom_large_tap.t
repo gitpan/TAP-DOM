@@ -9,6 +9,7 @@ use TAP::DOM;
 use Data::Dumper;
 use Devel::Size 'total_size';
 use Benchmark ':all', ':hireswallclock';
+use Devel::Size 'total_size';
 
 my $tap;
 {
@@ -50,4 +51,3 @@ foreach my $usebitsets (0..1) {
         print "  ...\n";
 }
 done_testing;
-
